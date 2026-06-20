@@ -1,6 +1,6 @@
 """Boundary check.
 
-Reads `CLAIMS.md` plus the PR's `# Group: <name>` marker and the
+Reads `GROUPS.md` plus the PR's `# Group: <name>` marker and the
 git-diff against the merge base. Fails if the PR touches files
 outside the owned paths of the group's claimed slot.
 
@@ -16,7 +16,7 @@ Local usage (during development, against your working tree):
 
 Behaviour
 ---------
-- Reads each `(channel|provider, group, owned-paths)` row from CLAIMS.md.
+- Reads each `(channel|provider, group, owned-paths)` row from GROUPS.md.
 - Locates the group's claimed slots (a group may claim more than one
   slot in principle; the script unions their paths).
 - For each file in `git diff --name-only base..head`, checks the path
@@ -25,7 +25,7 @@ Behaviour
 
 The script also recognises two allowlist categories that any group
 may touch:
-  - `CLAIMS.md` (to update the claim row itself)
+  - `GROUPS.md` (to update the claim row itself)
   - PR-meta files: `.github/PULL_REQUEST_TEMPLATE.md`
 The maintainers' shared-code path bypasses the check by omitting the
 `# Group:` marker — the script exits 0 in that case with a notice.
@@ -41,11 +41,11 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-CLAIMS_PATH = ROOT / "CLAIMS.md"
+CLAIMS_PATH = ROOT / "GROUPS.md"
 
 # Any group may modify these without a slot claim.
 SHARED_ALLOWLIST: list[str] = [
-    "CLAIMS.md",
+    "GROUPS.md",
 ]
 
 
@@ -136,7 +136,7 @@ def main() -> int:
 
     globs = claimed_globs(rows, group)
     if not globs:
-        print(f"[boundary] FAIL: group {group!r} has no claimed slot in CLAIMS.md")
+        print(f"[boundary] FAIL: group {group!r} has no claimed slot in GROUPS.md")
         return 2
 
     files = git_diff_names(args.base, args.head)

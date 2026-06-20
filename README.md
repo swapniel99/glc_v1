@@ -52,20 +52,24 @@ code changes.
 ./daemon/install.sh --models       # fetch Kokoro + whisper.cpp base model
 ```
 
-## Claim a slot and write an adapter
+## Your group's adapter
 
-There are **two** kinds of claimable slots:
+There are **22 group slots**:
 
 - **15 channel adapters** under `glc/channels/catalogue/<name>/`.
 - **7 voice providers** under `glc/voice/stt/providers/<name>/` and
   `glc/voice/tts/providers/<name>/` (3 STT + 4 TTS).
   `system_fallback` ships fully implemented and is **not** a slot.
 
+Group → slot assignments are **fixed by the instructors** and listed in
+[`GROUPS.md`](GROUPS.md). There is no claim PR — the assignment table
+is the source of truth. If you think your group's row is wrong, raise
+it in the S11 chat (`G<n>` sub-channel) and a TA will correct it.
+
 Workflow:
 
-1. Open a PR against [`CLAIMS.md`](CLAIMS.md) replacing `(unclaimed)`
-   with your group name for one row. Slots cannot be claimed twice
-   (CI enforces uniqueness).
+1. Find your group's row in [`GROUPS.md`](GROUPS.md). Note the slot
+   name and the `Owned paths`.
 2. Read [`docs/ADAPTER_GUIDE.md`](docs/ADAPTER_GUIDE.md).
 3. Implement `adapter.py` (and `schemas.py` if needed) against the
    mock-API fake under `tests/channels/mocks/` or
@@ -75,7 +79,7 @@ Workflow:
 5. The [`adapter-pr.yml`](.github/workflows/adapter-pr.yml) workflow
    runs three jobs against your PR:
    - **boundary** — fails if your diff touches files outside your
-     `Owned paths` in CLAIMS.md.
+     `Owned paths` in GROUPS.md.
    - **test-changed-slot** — runs only the matching
      `test_<slot>.py`, plus `ruff` and `mypy` on your slot's dir.
    - **scorecard** — auto-comments a per-group rubric scorecard.
@@ -94,7 +98,7 @@ Workflow:
 - [`scripts/validate_policy.py`](scripts/validate_policy.py) —
   `policy.yaml` must parse and the five lecture defaults must load
 - [`scripts/validate_claims.py`](scripts/validate_claims.py) —
-  no duplicate claims in `CLAIMS.md`
+  no duplicate group rows in `GROUPS.md`
 
 ## Architecture and rationale
 

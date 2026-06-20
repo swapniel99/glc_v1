@@ -1,4 +1,4 @@
-"""CLAIMS.md uniqueness gate. A channel cannot be claimed twice."""
+"""GROUPS.md uniqueness gate. A channel cannot be claimed twice."""
 
 from __future__ import annotations
 
@@ -6,13 +6,13 @@ import re
 import sys
 from pathlib import Path
 
-CLAIMS = Path(__file__).parent.parent / "CLAIMS.md"
+CLAIMS = Path(__file__).parent.parent / "GROUPS.md"
 ROW = re.compile(r"^\|\s*([a-z_]+)\s*\|\s*([^|]+)\s*\|\s*([^|]*)\s*\|")
 
 
 def main() -> int:
     if not CLAIMS.exists():
-        print("FAIL: CLAIMS.md missing")
+        print("FAIL: GROUPS.md missing")
         return 1
     seen: dict[str, str] = {}
     failures: list[str] = []
@@ -32,7 +32,7 @@ def main() -> int:
         for f in failures:
             print("FAIL:", f)
         return 1
-    print(f"OK: CLAIMS.md ({sum(1 for _ in seen)} active claims)")
+    print(f"OK: GROUPS.md ({sum(1 for _ in seen)} active claims)")
     return 0
 
 
