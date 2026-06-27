@@ -92,17 +92,57 @@ The trust boundary is exercised across three tests: owner (`owner_paired`), stra
 
 ## Local demo (Bot Framework Emulator)
 
-The repo root contains `local_emulator_runner.py` — a FastAPI server that bridges the Bot Framework Emulator to the real adapter without needing a deployed GLC gateway.
+The `setup/` folder contains two scripts for running and configuring the adapter locally without a deployed GLC gateway or Azure Bot resource.
+
+### Files
+
+| File | Purpose |
+|---|---|
+| `setup/emulator_runner.py` | FastAPI bridge between the Emulator and the real adapter |
+| `setup/trust_setup.py` | CLI to set trust level for the Emulator user |
+
+### Start the server
 
 ```bash
-# Install deps (Python ≥ 3.11)
-pip install -e ".[dev]"
-
-# Run the bridge
-python local_emulator_runner.py
-# Listening on http://localhost:3978/api/messages
+# From repo root (Python ≥ 3.11)
+uv run python glc/channels/catalogue/teams/setup/emulator_runner.py
+# Listening on http://0.0.0.0:3978
 ```
 
-Then open Bot Framework Emulator (v4.15.1, last release before Microsoft archived it in Jan 2026) and connect to `http://localhost:3978/api/messages` in **anonymous mode** (no App ID / password needed for the emulator path). Send a message — you should see a round-trip reply in the emulator chat window.
+Then open Bot Framework Emulator v4.15.1, click **Open Bot**, set Bot URL to `http://localhost:3978/api/messages`, leave App ID / Password blank, and connect.
 
-> The emulator's anonymous mode bypasses Azure AD entirely. For the authenticated send path (real Bot registration), you additionally need `TEAMS_APP_ID`, `TEAMS_APP_PASSWORD`, and `TEAMS_TENANT_ID` set as env vars — but you still need a Teams tenant to open Teams from, which the Microsoft 365 Developer Program no longer auto-grants.
+### Demo all three trust levels
+
+By default every new Emulator user is `untrusted`. The Emulator generates a new user ID each session — find yours in the server logs first:
+
+```
+Received activity type='message' from='<id>' text='...'
+```
+
+Then pass it via `--user-id` to set the trust level before sending each message:
+
+```bash
+# Show current pairing state (no --user-id needed)
+uv run python glc/channels/catalogue/teams/setup/trust_setup.py --show
+
+# Pair as owner — next message → trust=owner_paired
+uv run python glc/channels/catalogue/teams/setup/trust_setup.py --owner --user-id <id>
+
+# Pair as regular user — next message → trust=user_paired
+uv run python glc/channels/catalogue/teams/setup/trust_setup.py --user --user-id <id>
+
+# Revoke — next message → trust=untrusted
+uv run python glc/channels/catalogue/teams/setup/trust_setup.py --revoke --user-id <id>
+```
+
+### What the server logs show
+
+```
+2026-06-26 15:10:27 INFO Received activity type='message' from='4b7e88...' text='hello'
+2026-06-26 15:10:27 INFO Parsed message: text='hello' trust='owner_paired' user='4b7e88...'
+2026-06-26 15:10:27 INFO Returning inline reply: "GLC teams adapter received: 'hello' (trust=owner_paired)"
+```
+
+Each step maps directly to the adapter's logic: activity type guard → trust classification → allowlist check → ChannelMessage → reply.
+
+> **Anonymous mode note:** the Emulator's anonymous mode bypasses Azure AD entirely. For the real authenticated send path you need `TEAMS_APP_ID`, `TEAMS_APP_PASSWORD`, and `TEAMS_TENANT_ID` as env vars and an actual Azure Bot registration. The demo works fully without these.
