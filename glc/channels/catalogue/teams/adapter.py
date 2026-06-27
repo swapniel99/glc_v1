@@ -61,7 +61,7 @@ def _extract_adaptive_card_text(card: dict[str, Any]) -> str | None:
         if node.get("type") == "TextBlock" and node.get("text"):
             return str(node["text"])
         nested = node.get("items") or node.get("columns") or []
-        queue = list(nested) + queue
+        queue = queue + list(nested)
     return None
 
 
